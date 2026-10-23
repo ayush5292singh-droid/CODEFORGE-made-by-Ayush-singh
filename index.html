@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080c17">
+<title>CODEFORGE MAX</title>
+<style>
+:root{color-scheme:dark;--bg:#080c17;--panel:#101728;--panel2:#151f33;--line:#283650;--text:#edf4ff;--muted:#92a3c1;--cyan:#50e8f4;--violet:#a78bfa;--green:#8cf0b0;--red:#ff718c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px system-ui,-apple-system,Segoe UI,sans-serif}
+button,select{font:inherit;cursor:pointer}
+button{color:inherit}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:13px 17px;background:#0c1220;border-bottom:1px solid var(--line)}
+.brand{font-weight:950;font-size:20px;letter-spacing:-.7px}.brand span{color:var(--cyan)}
+.sub{font-size:11px;color:var(--muted);font-weight:500;letter-spacing:.3px}
+.actions,.tools,.tabs{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.btn{background:#18233a;border:1px solid #34445f;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700}
+.btn:hover{border-color:var(--cyan)}
+.btn.primary{background:linear-gradient(120deg,var(--cyan),#a8a3ff);color:#07101b;border:0}
+.btn.warn{color:#ff9aae}
+main{padding:12px;max-width:1800px;margin:auto}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.panel{min-width:0;overflow:hidden;background:var(--panel);border:1px solid var(--line);border-radius:12px;display:flex;flex-direction:column}
+.panelhead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:10px 12px;background:#121b2d;border-bottom:1px solid var(--line)}
+.paneltitle{font-weight:850}
+select{background:#0b1221;color:var(--text);border:1px solid #34445f;border-radius:8px;padding:7px;max-width:100%}
+.editorbox{height: min(67vh,720px);min-height:390px;background:#0a1020}
+textarea{display:block;width:100%;height:100%;resize:vertical;background:#0a1020;color:#dce8ff;border:0;outline:0;padding:15px;font:13px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace;tab-size:2;white-space:pre;overflow:auto}
+.editorfoot{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:7px 11px;color:var(--muted);font-size:11px;border-top:1px solid var(--line)}
+.tabs{gap:4px}.tab{border:1px solid transparent;background:transparent;color:var(--muted);border-radius:7px;padding:7px 9px;font-size:12px}.tab.active{background:#25314a;border-color:#3b4b68;color:white}
+.output{position:relative;height:min(67vh,720px);min-height:390px;background:#fff}
+#preview{display:block;width:100%;height:100%;min-height:390px;border:0;background:white}
+#three{display:none;width:100%;height:100%;min-height:390px;background:radial-gradient(circle at 50% 30%,#1d3152,#080d18 75%);touch-action:none}
+.console{height:145px;background:#090e19;border-top:1px solid var(--line);display:flex;flex-direction:column}
+.consolehead{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid #202c42;font-size:11px;font-weight:800}
+#logs{padding:8px 11px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;font:12px/1.6 ui-monospace,Consolas,monospace;color:#bfcee6;flex:1}
+.log{padding:2px 0;border-bottom:1px solid #ffffff09}.error{color:#ff8da3}.success{color:#91f0b0}.warning{color:#ffd58b}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.card{background:#0f1626;border:1px solid var(--line);border-radius:11px;padding:12px}
+.card strong{display:block;margin-bottom:5px}.card p{color:var(--muted);font-size:12px;margin:0;line-height:1.55}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);padding:10px 15px;border-radius:10px;background:#e9fdff;color:#06111a;font-weight:800;z-index:20;box-shadow:0 8px 35px #0008}
+.hidden{display:none!important}
+@media(max-width:850px){main{padding:8px}.grid{grid-template-columns:1fr}.editorbox,.output{height:55vh;min-height:320px}#preview,#three{min-height:320px}.cards{grid-template-columns:1fr}.brand{font-size:18px}}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <div class="brand">⌘ CODEFORGE <span>MAX</span></div>
+    <div class="sub">CODE EDITOR · LIVE PREVIEW · 3D STUDIO</div>
+  </div>
+  <div class="actions">
+    <button class="btn" id="save">Save</button>
+    <button class="btn" id="export">Export</button>
+    <button class="btn" id="reset">Reset example</button>
+    <button class="btn primary" id="run">▶ Run code</button>
+  </div>
+</header>
+
+<main>
+<div class="grid">
+  <section class="panel">
+    <div class="panelhead">
+      <div><div class="paneltitle">Code editor</div><div class="sub" id="filename">index.html</div></div>
+      <div class="tools">
+        <select id="language" aria-label="Language">
+          <option value="html">HTML / CSS / JS</option>
+          <option value="js">JavaScript</option>
+          <option value="python">Python</option>
+          <option value="lua">Lua</option>
+          <option value="three">3D starter</option>
+        </select>
+        <select id="examples" aria-label="Starter examples">
+          <option value="">Load example…</option>
+          <option value="landing">Landing page</option>
+          <option value="counter">Interactive counter</option>
+          <option value="canvas">Canvas drawing</option>
+          <option value="js">JavaScript example</option>
+          <option value="python">Python example</option>
+          <option value="lua">Lua example</option>
+        </select>
+      </div>
+    </div>
+    <div class="editorbox"><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Source code"></textarea></div>
+    <div class="editorfoot"><span id="mode">HTML • Live preview</span><span id="position">Ready</span><span id="savedState">Unsaved changes</span></div>
+  </section>
+
+  <section class="panel">
+    <div class="panelhead">
+      <div><div class="paneltitle">Workspace</div><div class="sub" id="status">Ready to run</div></div>
+      <div class="tabs">
+        <button class="tab active" data-tab="preview">Preview</button>
+        <button class="tab" data-tab="three">3D Studio</button>
+        <button class="tab" data-tab="console">Console</button>
+      </div>
+      <button class="btn" id="clearlogs">Clear logs</button>
+    </div>
+    <div class="output" id="output">
+      <iframe id="preview" title="Code preview" sandbox="allow-scripts allow-forms allow-modals allow-pointer-lock"></iframe>
+      <canvas id="three"></canvas>
+    </div>
+    <div class="console" id="console">
+      <div class="consolehead"><span>CONSOLE / RUNTIME LOGS</span><span id="logcount">0 messages</span></div>
+      <div id="logs"><div class="log">Ready. Press Run code to execute your project.</div></div>
+    </div>
+  </section>
+</div>
+
+<div class="cards">
+  <div class="card"><strong>01 · Edit and run</strong><p>HTML, CSS and JavaScript execute in a sandboxed browser preview. Try the starter examples or paste your own code.</p></div>
+  <div class="card"><strong>02 · Save and export</strong><p>Save your current project in this browser or export the source file to your device. Browser storage may be cleared by the browser.</p></div>
+  <div class="card"><strong>03 · Python, Lua and 3D</strong><p>Python and Lua use external browser runtimes and require internet access. The built-in 3D Studio is an interactive demo scene; it does not execute arbitrary 3D source code.</p></div>
+</div>
+</main>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+(() => {
+"use strict";
+const $=id=>document.getElementById(id);
+const htmlStarter=`<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 20% 20%,#253e6b,#090e1c 65%);font:16px system-ui;color:#f1f5ff}.card{max-width:460px;padding:32px;border-radius:24px;background:#121c30;border:1px solid #344763;box-shadow:0 25px 70px #0007}.tag{color:#50e8f4;font-weight:800;letter-spacing:2px;font-size:12px}.orb{display:grid;place-items:center;margin:24px 0;width:66px;height:66px;border-radius:20px;background:linear-gradient(135deg,#50e8f4,#a78bfa);color:#07101b;font-size:30px}.card h1{font-size:38px;line-height:1.05;margin:0}.card p{color:#b7c5df;line-height:1.7}.card button{border:0;border-radius:10px;background:#50e8f4;color:#06111b;padding:12px 18px;font-weight:800;cursor:pointer}
+</style>
+</head>
+<body><main class="card"><div class="tag">YOUR LIVE PREVIEW</div><div class="orb">✦</div><h1>Build something brilliant.</h1><p>This is a real interactive preview. Change the source in the editor and press Run code.</p><button id="hello">Test interaction</button><p id="result"></p></main><script>document.getElementById('hello').onclick=()=>{document.getElementById('result').textContent='It works! JavaScript is running.';console.log('Button clicked successfully')};console.log('Preview loaded');<\/script></body></html>`;
+const examples={
+html:htmlStarter,
+js:`// JavaScript playground\nconsole.log("Hello from CODEFORGE MAX!");\nconst values = [10, 20, 30, 40];\nconsole.log("Total:", values.reduce((a,b)=>a+b,0));\ndocument.body.innerHTML = '<main style="font:18px system-ui;padding:28px;background:#101728;color:white;min-height:100vh"><h1 style="color:#50e8f4">JavaScript works!</h1><p>Edit this code and press Run code.</p><button id="counter">Clicks: 0</button></main>';\nlet clicks=0;\ndocument.getElementById('counter').onclick=()=>{document.getElementById('counter').textContent='Clicks: '+(++clicks);console.log('Clicks:',clicks)};`,
+python:`# Python example (internet required on first run)\nprint("Hello from Python!")\nvalues = [10, 20, 30, 40]\nprint("Values:", values)\nprint("Total:", sum(values))\nfor number in range(1, 6):\n    print("Number:", number)`,
+lua:`-- Lua example (internet required)\nprint("Hello from Lua!")\nlocal values = {10, 20, 30, 40}\nlocal total = 0\nfor _, value in ipairs(values) do total = total + value end\nprint("Total:", total)\nfor i = 1, 5 do print("Number:", i) end`,
+three:`// 3D Studio starter\n// Select the 3D Studio tab to view and rotate the built-in 3D scene.\n// Arbitrary code in this editor is not executed by the built-in 3D viewer.\nconsole.log("Open 3D Studio to explore the scene.");`,
+landing:`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#080c17;color:#f0f5ff;font:16px system-ui}.nav{padding:22px 7%;display:flex;justify-content:space-between;border-bottom:1px solid #293650}.nav b{color:#50e8f4}.hero{padding:12vh 8%;max-width:800px}.hero h1{font-size:clamp(42px,8vw,78px);line-height:1.02;margin:15px 0}.hero p{color:#aebbd5;line-height:1.8;max-width:540px}.hero button{padding:13px 20px;border:0;border-radius:9px;background:#50e8f4;font-weight:800;cursor:pointer}.label{color:#50e8f4;letter-spacing:2px;font-weight:800;font-size:12px}</style></head><body><nav class="nav"><b>YOUR BRAND</b><span>Home　 About　 Contact</span></nav><section class="hero"><div class="label">DESIGN YOUR FUTURE</div><h1>Ideas into<br>reality.</h1><p>A responsive starter landing page. Edit the HTML and CSS to make it yours.</p><button onclick="document.getElementById('msg').textContent='Button works!'">Get started</button><p id="msg"></p></section></body></html>`,
+counter:`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1020;color:white;font:18px system-ui}.box{text-align:center;background:#151f33;padding:30px;border-radius:20px;border:1px solid #34445f}.n{font-size:60px;color:#50e8f4}.box button{padding:10px 18px;margin:5px;border-radius:9px;border:0;font-weight:800;cursor:pointer}</style></head><body><div class="box"><h1>Counter</h1><div class="n" id="n">0</div><button onclick="change(-1)">−</button><button onclick="change(1)">+</button><button onclick="reset()">Reset</button></div><script>let n=0;function change(v){n+=v;document.getElementById('n').textContent=n;console.log('Counter:',n)}function reset(){n=0;document.getElementById('n').textContent=n;console.log('Reset')}<\/script></body></html>`,
+canvas:`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#0b1020;color:white;font:14px system-ui;text-align:center}canvas{display:block;width:100%;height:75vh;touch-action:none}p{color:#b5c4de}</style></head><body><h2>Canvas Drawing</h2><p>Drag your mouse or finger to draw.</p><canvas id="c"></canvas><script>const c=document.getElementById('c'),x=c.getContext('2d');function size(){c.width=c.clientWidth*devicePixelRatio;c.height=c.clientHeight*devicePixelRatio;x.scale(devicePixelRatio,devicePixelRatio)}size();window.addEventListener('resize',size);let down=false;c.onpointerdown=e=>{down=true;c.setPointerCapture(e.pointerId);x.beginPath();x.moveTo(e.offsetX,e.offsetY)};c.onpointerup=()=>down=false;c.onpointermove=e=>{if(!down)return;x.strokeStyle='#50e8f4';x.lineWidth=4;x.lineCap='round';x.lineTo(e.offsetX,e.offsetY);x.stroke()};<\/script></body></html>`
+};
+let view="preview",threeInit=false,pyPromise=null,dirty=true,toastTimer;
+function toast(msg){$("toast").textContent=msg;$("toast").classList.remove("hidden");clearTimeout(toastTimer);toastTimer=setTimeout(()=>$("toast").classList.add("hidden"),2200)}
+function setStatus(msg){$("status").textContent=msg}
+function setDirty(){dirty=true;$("savedState").textContent="Unsaved changes"}
+function log(msg,type=""){const row=document.createElement("div");row.className="log "+type;row.textContent=String(msg);$("logs").appendChild(row);$("logs").scrollTop=$("logs").scrollHeight;$("logcount").textContent=$("logs").children.length+" messages"}
+function clearLogs(){$("logs").innerHTML="";$("logcount").textContent="0 messages"}
+function selectLanguage(lang){$("language").value=lang;const names={html:["index.html","HTML • Live preview"],js:["script.js","JavaScript • Sandbox"],python:["main.py","Python • Browser runtime"],lua:["main.lua","Lua • Browser runtime"],three:["scene.js","3D Studio starter"]};$("filename").textContent=names[lang][0];$("mode").textContent=names[lang][1]}
+function setCode(value){$("code").value=value;setDirty();updatePosition()}
+function updatePosition(){const t=$("code"),i=t.selectionStart||0,before=t.value.slice(0,i).split("\n");$("position").textContent="Ln "+before.length+", Col "+(before[before.length-1].length+1)}
+function loadExample(name){const map={landing:"landing",counter:"counter",canvas:"canvas",js:"js",python:"python",lua:"lua"};if(name==="")return;const lang=map[name];if(lang==="python"||lang==="lua"||lang==="js"){selectLanguage(lang)}else selectLanguage("html");setCode(examples[name]||examples.html);$("examples").value="";toast("Example loaded");}
+function previewDoc(code){const bridge=`<script>(function(){function send(type,args){try{parent.postMessage({cf:true,type:type,args:Array.from(args||[]).map(x=>{try{return typeof x==='string'?x:JSON.stringify(x)}catch(e){return String(x)}})},'*')}catch(e){}}['log','info','debug'].forEach(k=>{const old=console[k].bind(console);console[k]=function(){send('log',arguments);old.apply(console,arguments)}});console.warn=function(){send('warn',arguments)};console.error=function(){send('error',arguments)};addEventListener('error',e=>send('error',[e.message+' (line '+e.lineno+')']));addEventListener('unhandledrejection',e=>send('error',['Promise error: '+e.reason]));send('log',['Preview started']);})();<\/script>`;
+if(/<head[\s>]/i.test(code))return code.replace(/<head([^>]*)>/i,"<head$1>"+bridge);
+if(/<html[\s>]/i.test(code))return code.replace(/<html([^>]*)>/i,"<html$1><head>"+bridge+"</head>");
+return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'+bridge+'</head><body>'+code+'</body></html>'}
+function showTab(which){view=which;document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===which));$("preview").style.display=which==="preview"?"block":"none";$("three").style.display=which==="three"?"block":"none";$("console").style.display=which==="console"?"flex":"none";if(which==="three")init3D()}
+function runHTML(){clearLogs();$("preview").srcdoc=previewDoc($("code").value);$("preview").style.display="block";setStatus("HTML preview running");log("Preview launched.","success");showTab("preview")}
+function runJS(){clearLogs();const source=$("code").value;const wrapper=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0;background:#0b1020;color:#edf4ff;font:14px system-ui}button{cursor:pointer}</style></head><body><div id="app"></div><script>(function(){function send(type,args){parent.postMessage({cf:true,type:type,args:Array.from(args||[]).map(x=>{try{return typeof x==='string'?x:JSON.stringify(x)}catch(e){return String(x)}})},'*')}['log','info','debug'].forEach(k=>{const old=console[k].bind(console);console[k]=function(){send('log',arguments);old.apply(console,arguments)}});console.warn=function(){send('warn',arguments)};console.error=function(){send('error',arguments)};addEventListener('error',e=>send('error',[e.message+' (line '+e.lineno+')']));try{(new Function('document','window','console',${JSON.stringify(source)}))(document,window,console)}catch(e){send('error',[e.stack||e.message]);document.body.innerHTML='<pre id="err" style="padding:20px;color:#ff718c;white-space:pre-wrap"></pre>';document.getElementById('err').textContent=e.stack||e.message}})();<\/script></body></html>`;$("preview").srcdoc=wrapper;setStatus("JavaScript running in sandbox");log("JavaScript execution started.","success");showTab("preview")}
+async function runPython(){clearLogs();setStatus("Loading Python runtime");log("Python requires an internet connection to load Pyodide.","warning");try{if(!pyPromise)pyPromise=import("https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.mjs").then(m=>m.loadPyodide());const py=await pyPromise;py.setStdout({batched:s=>log(s)});py.setStderr({batched:s=>log(s,"error")});await py.runPythonAsync($("code").value);log("Python finished.","success");setStatus("Python completed");showTab("console")}catch(e){log(e.message||e,"error");setStatus("Python error");showTab("console")}}
+async function runLua(){clearLogs();setStatus("Loading Lua runtime");log("Lua requires internet access to load Fengari.","warning");try{if(!window.fengari)await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://unpkg.com/fengari-web@0.1.4/dist/fengari-web.js";s.onload=res;s.onerror=()=>rej(Error("Could not load Lua runtime. Check your connection."));document.head.appendChild(s)});const f=window.fengari;if(!f)throw Error("Lua runtime did not initialize");const {lua,lauxlib,lualib,to_luastring,to_jsstring}=f,L=lauxlib.luaL_newstate();lualib.luaL_openlibs(L);lua.lua_pushjsfunction(L,S=>{const n=lua.lua_gettop(S),a=[];for(let i=1;i<=n;i++){a.push(to_jsstring(lua.luaL_tolstring(S,i,null)));lua.lua_pop(S,1)}log(a.join("\t"));return 0});lua.lua_setglobal(L,to_luastring("print"));let rc=lauxlib.luaL_loadstring(L,to_luastring($("code").value));if(rc===lua.LUA_OK)rc=lua.lua_pcall(L,0,lua.LUA_MULTRET,0);if(rc!==lua.LUA_OK)throw Error(to_jsstring(lua.lua_tolstring(L,-1)));log("Lua finished.","success");setStatus("Lua completed");showTab("console")}catch(e){log(e.message||e,"error");setStatus("Lua error");showTab("console")}}
+function run(){const l=$("language").value;if(l==="html")runHTML();else if(l==="js")runJS();else if(l==="python")runPython();else if(l==="lua")runLua();else{showTab("three");log("Use the 3D Studio tab to explore the built-in scene. Arbitrary 3D source execution is not supported.","warning");setStatus("3D Studio ready")}}
+function save(){try{localStorage.setItem("codeforgeMaxProject",JSON.stringify({language:$("language").value,code:$("code").value}));dirty=false;$("savedState").textContent="Saved locally";setStatus("Saved on this device");toast("Project saved")}catch(e){toast("Browser storage unavailable")}}
+function exportCode(){const lang=$("language").value,ext={html:"html",js:"js",python:"py",lua:"lua",three:"js"}[lang],file={html:"index.html",js:"script.js",python:"main.py",lua:"main.lua",three:"scene.js"}[lang];const url=URL.createObjectURL(new Blob([$("code").value],{type:"text/plain;charset=utf-8"}));const a=document.createElement("a");a.href=url;a.download=file||"project."+ext;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast("Source exported")}
+function reset(){if(!confirm("Replace your current editor contents with the starter example?"))return;selectLanguage("html");setCode(htmlStarter);runHTML()}
+window.addEventListener("message",e=>{if(!e.data||!e.data.cf)return;const msg=(e.data.args||[]).join(" ");log(msg,e.data.type==="error"?"error":e.data.type==="warn"?"warning":"")});
+$("run").onclick=run;$("save").onclick=save;$("export").onclick=exportCode;$("reset").onclick=reset;$("clearlogs").onclick=clearLogs;$("examples").onchange=e=>loadExample(e.target.value);
+$("language").onchange=e=>{const l=e.target.value;selectLanguage(l);setCode(examples[l]||htmlStarter);if(l==="three")showTab("three");else showTab(l==="python"||l==="lua"?"console":"preview")};
+$("code").addEventListener("input",()=>{setDirty();updatePosition()});["click","keyup","select"].forEach(ev=>$("code").addEventListener(ev,updatePosition));
+document.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+function init3D(){if(threeInit)return;threeInit=true;const canvas=$("three"),ctx=canvas.getContext("2d");let angle=0,drag=false,lastX=0,lastY=0,tilt=.35,zoom=1;
+function resize(){const r=canvas.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);canvas.width=Math.max(1,Math.round(r.width*d));canvas.height=Math.max(1,Math.round(r.height*d));ctx.setTransform(d,0,0,d,0,0)}
+function project(p,w,h){const ca=Math.cos(angle),sa=Math.sin(angle),ct=Math.cos(tilt),st=Math.sin(tilt);let x=p[0]*ca-p[2]*sa,z=p[0]*sa+p[2]*ca,y=p[1]*ct-z*st;z=p[1]*st+z*ct;const scale=Math.min(w,h)*.105*zoom/(1+z*.035);return [w/2+x*scale,h/2-y*scale]}
+function line(a,b,color,width=1){const p=project(a,canvas.clientWidth,canvas.clientHeight),q=project(b,canvas.clientWidth,canvas.clientHeight);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(...p);ctx.lineTo(...q);ctx.stroke()}
+function cube(cx,cy,cz,size,color){const s=size/2,pts=[[-s,-s,-s],[s,-s,-s],[s,s,-s],[-s,s,-s],[-s,-s,s],[s,-s,s],[s,s,s],[-s,s,s]].map(p=>[p[0]+cx,p[1]+cy,p[2]+cz]);[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]].forEach(([a,b])=>line(pts[a],pts[b],color,2))}
+function sphere(cx,cy,cz,r,color){for(let v=0;v<3;v++){let prev=null;for(let i=0;i<=64;i++){const a=i/64*Math.PI*2;let p=v===0?[cx+r*Math.cos(a),cy+r*Math.sin(a),cz]:v===1?[cx+r*Math.cos(a),cy,cz+r*Math.sin(a)]:[cx,cy+r*Math.cos(a),cz+r*Math.sin(a)];if(prev)line(prev,p,color,1.7);prev=p}}}
+function draw(){const w=canvas.clientWidth,h=canvas.clientHeight;if(!w||!h){requestAnimationFrame(draw);return}ctx.clearRect(0,0,w,h);ctx.fillStyle="#080d18";ctx.fillRect(0,0,w,h);
+for(let i=-7;i<=7;i++){line([i,-1.5,-7],[i,-1.5,7],"#23354d");line([-7,-1.5,i],[7,-1.5,i],"#23354d")}
+cube(-1,0,0,1.6,"#50e8f4");sphere(1.2,0,0,.85,"#a78bfa");
+const tor=[];for(let i=0;i<=80;i++){const a=i/80*Math.PI*2;tor.push([.75*Math.cos(a),1.65+.16*Math.sin(a),0])}for(let i=1;i<tor.length;i++)line(tor[i-1],tor[i],"#ffd166",2);
+ctx.fillStyle="#dce9ff";ctx.font="12px system-ui";ctx.fillText("CODEFORGE MAX · 3D PREVIEW",14,22);
+ctx.fillStyle="#91a4c4";ctx.fillText("Drag to rotate · Scroll to zoom",14,41);
+angle+=drag?0:.003;requestAnimationFrame(draw)}
+canvas.addEventListener("pointerdown",e=>{drag=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId)});canvas.addEventListener("pointerup",()=>drag=false);canvas.addEventListener("pointercancel",()=>drag=false);canvas.addEventListener("pointermove",e=>{if(!drag)return;angle+=(e.clientX-lastX)*.01;tilt=Math.max(-1,Math.min(1,tilt+(e.clientY-lastY)*.005));lastX=e.clientX;lastY=e.clientY});canvas.addEventListener("wheel",e=>{e.preventDefault();zoom=Math.max(.5,Math.min(2,zoom*(e.deltaY>0?.92:1.08)))},{passive:false});window.addEventListener("resize",resize);resize();draw()}
+selectLanguage("html");$("code").value=htmlStarter;
+try{const saved=JSON.parse(localStorage.getItem("codeforgeMaxProject")||"null");if(saved&&typeof saved.code==="string"){selectLanguage(saved.language||"html");$("code").value=saved.code;$("savedState").textContent="Restored saved project"}}catch(e){}
+runHTML();
+})();
+</script>
+</body>
+</html>
